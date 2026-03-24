@@ -1,28 +1,41 @@
+export const runtime = "nodejs";
+
 import OpenAI from "openai";
 
 export async function POST(req: Request) {
   try {
     const { question } = await req.json();
 
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("Missing API key");
+    }
+
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const completion = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input: `You are a student support assistant. Help with Canvas usage, study tips, and online learning. Do NOT provide answers to graded assignments.
-
-Question: ${question}`,
+    const response = await client.responses.create({
+      model: "gpt-4o-mini",
+      input: question,
     });
 
-    const answer = completion.output_text;
+    const answer =
+      response.output_text ??
+      "AI returned no text.";
 
-    return Response.json({ answer });
-  } catch (error) {
-    console.error("API ERROR:", error);
+    return new Response(
+      JSON.stringify({ answer }),
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-    return Response.json({
-      answer: "Server error — check terminal logs.",
-    });
+  } catch (err) {
+    console.error("FULL SERVER ERROR:", err);
+
+    return new Response(
+      JSON.stringify({
+        answer: "Server error — see terminal",
+      }),
+      { status: 500 }
+    );
   }
 }
