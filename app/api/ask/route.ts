@@ -8,29 +8,21 @@ export async function POST(req: Request) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a student support assistant. Help with Canvas usage, study tips, and online learning. Do NOT provide answers to graded assignments.",
-        },
-        {
-          role: "user",
-          content: question,
-        },
-      ],
+    const completion = await client.responses.create({
+      model: "gpt-4.1-mini",
+      input: `You are a student support assistant. Help with Canvas usage, study tips, and online learning. Do NOT provide answers to graded assignments.
+
+Question: ${question}`,
     });
 
-    return Response.json({
-      answer: response.choices[0].message.content,
-    });
+    const answer = completion.output_text;
+
+    return Response.json({ answer });
   } catch (error) {
-    console.error(error);
+    console.error("API ERROR:", error);
 
     return Response.json({
-      answer: "Something went wrong. Check server logs.",
+      answer: "Server error — check terminal logs.",
     });
   }
 }
