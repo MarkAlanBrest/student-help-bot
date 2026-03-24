@@ -93,7 +93,7 @@ export default function Home() {
                   : "bg-white border"
               }`}
             >
-              <p>{msg.text}</p>
+<p className="whitespace-pre-wrap">{msg.text}</p>
 
               {msg.fileName && (
                 <p className="text-sm mt-2 opacity-80">
