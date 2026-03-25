@@ -54,7 +54,6 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
-        cache: "no-store",
       });
 
       const data = await res.json();
@@ -105,17 +104,19 @@ export default function Home() {
         <button
           onClick={resetChat}
           className="text-slate-600 hover:text-red-600 flex items-center gap-1 text-sm"
-          title="Start new chat"
         >
           <RefreshCw size={16} />
           Reset
         </button>
       </div>
 
-      {/* Recommended topics */}
-      {messages.length === 0 && (
-        <div className="p-4 border-b bg-slate-50">
-          <h2 className="text-xs font-semibold mb-2 text-slate-700">Try asking about:</h2>
+      {/* Two-column layout */}
+      <div className="flex flex-row border-b border-slate-200 bg-slate-50">
+
+        {/* Left column */}
+        <div className="w-1/3 p-4 border-r border-slate-200">
+          <h2 className="text-sm font-semibold mb-2 text-slate-700">Try asking about:</h2>
+
           <div className="flex flex-wrap gap-2">
             {recommended.map((topic) => (
               <button
@@ -128,55 +129,54 @@ export default function Home() {
             ))}
           </div>
         </div>
-      )}
 
-      {/* Chat window */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${
-              msg.role === "user"
-                ? "bg-blue-600 text-white ml-auto"
-                : "bg-slate-100 text-slate-900 border border-slate-300"
-            }`}
-          >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {String(msg.text)}
-            </ReactMarkdown>
+        {/* Right column */}
+        <div className="w-2/3 p-4 space-y-4 max-h-[200px] overflow-y-auto bg-white">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${
+                msg.role === "user"
+                  ? "bg-blue-600 text-white ml-auto"
+                  : "bg-slate-100 text-slate-900 border border-slate-300"
+              }`}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {String(msg.text)}
+              </ReactMarkdown>
 
-            {msg.fileName && (
-              <p className="text-xs mt-2 opacity-80 flex items-center gap-1">
-                <Paperclip size={14} /> {msg.fileName}
-              </p>
-            )}
+              {msg.fileName && (
+                <p className="text-xs mt-2 opacity-80 flex items-center gap-1">
+                  <Paperclip size={14} /> {msg.fileName}
+                </p>
+              )}
 
-            {msg.helpLink && (
-              <a
-                href={msg.helpLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 mt-3 text-xs font-medium underline"
-              >
-                <LinkIcon size={14} />
-                <span>Canvas Guide</span>
-              </a>
-            )}
+              {msg.helpLink && (
+                <a
+                  href={msg.helpLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 mt-3 text-xs font-medium underline"
+                >
+                  <LinkIcon size={14} />
+                  <span>Canvas Guide</span>
+                </a>
+              )}
 
-            {msg.helpDescription && (
-              <p className="text-xs mt-1 opacity-80">{msg.helpDescription}</p>
-            )}
-          </div>
-        ))}
+              {msg.helpDescription && (
+                <p className="text-xs mt-1 opacity-80">{msg.helpDescription}</p>
+              )}
+            </div>
+          ))}
 
-        {/* Typing indicator */}
-        {typing && (
-          <div className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-xl w-fit">
-            <span className="animate-pulse">Assistant is typing…</span>
-          </div>
-        )}
+          {typing && (
+            <div className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-xl w-fit">
+              <span className="animate-pulse">Assistant is typing…</span>
+            </div>
+          )}
 
-        <div ref={chatEndRef} />
+          <div ref={chatEndRef} />
+        </div>
       </div>
 
       {/* Input bar */}
