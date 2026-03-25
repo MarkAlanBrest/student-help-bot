@@ -54,7 +54,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: question }),   // ⭐ FIXED
-      });
+      }); 
 
       const data = await res.json();
       answer = data.reply || answer;                   // ⭐ FIXED

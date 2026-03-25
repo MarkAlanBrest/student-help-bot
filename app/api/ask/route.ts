@@ -1,34 +1,48 @@
 import { NextResponse } from "next/server";
 
-// --- CANVAS STUDENT GUIDE SEARCH (NO VIDEOS) ---
-async function searchCanvasGuide(query: string) {
+// --- CANVAS STUDENT GUIDE SEARCH (FIXED — NO SCRAPING) ---
+function searchCanvasGuide(query: string) {
+  const q = query.toLowerCase();
 
-
- const res = await fetch(
-  `https://community.instructure.com/en/kb/canvas-lms-student-guide/search?q=${encodeURIComponent(query)}`,
-  {
-    method: "GET",
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
-      "Accept": "text/html",
+  const guides = [
+    {
+      keywords: ["submit", "assignment", "turn in"],
+      title: "How do I submit an online assignment?",
+      url: "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/468",
     },
-  }
-);
+    {
+      keywords: ["grade", "grades", "score"],
+      title: "How do I view my grades?",
+      url: "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades/ta-p/414",
+    },
+    {
+      keywords: ["calendar", "due dates"],
+      title: "How do I use the Calendar?",
+      url: "https://community.canvaslms.com/t5/Student-Guide/How-do-I-use-the-Calendar/ta-p/424",
+    },
+    {
+      keywords: ["announcement", "announcements"],
+      title: "How do I view Announcements?",
+      url: "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-Announcements/ta-p/417",
+    },
+    {
+      keywords: ["discussion", "reply", "post"],
+      title: "How do I reply to a discussion?",
+      url: "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion/ta-p/452",
+    },
+    {
+      keywords: ["files", "download"],
+      title: "How do I download a file?",
+      url: "https://community.canvaslms.com/t5/Student-Guide/How-do-I-download-a-file/ta-p/421",
+    },
+  ];
 
-
-
-
-  const html = await res.text();
-
-  const matches = [...html.matchAll(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/g)];
-
-  return matches
-    .filter(m => m[1].includes("/kb/articles/"))
+  return guides
+    .filter(g => g.keywords.some(k => q.includes(k)))
     .slice(0, 5)
-    .map(m => ({
-      title: m[2].replace(/<[^>]+>/g, ""),
-      url: "https://community.instructure.com" + m[1]
+    .map(g => ({
+      title: g.title,
+      url: g.url,
     }));
 }
 
@@ -39,7 +53,7 @@ function getStudyAdvice() {
     "Break work into small tasks and schedule them.",
     "Use active recall and spaced repetition.",
     "Check announcements daily.",
-    "Message instructors early if confused."
+    "Message instructors early if confused.",
   ];
 }
 
@@ -55,50 +69,58 @@ function getNCSTInfo() {
       "Electrical",
       "HVAC",
       "CNC Machining",
-      "Heavy Equipment"
+      "Heavy Equipment",
     ],
     notes: [
       "Private trade school offering certificates and associate degrees.",
       "Provides job placement assistance.",
-      "Financial aid available for eligible students."
-    ]
+      "Financial aid available for eligible students.",
+    ],
   };
 }
 
 // --- BLOCK TEST/ASSIGNMENT ANSWERS ---
 function blocksCheating(userMessage: string) {
   const banned = [
-    "answer", "solve", "cheat", "test", "quiz", "exam",
-    "assignment answer", "what is the answer", "give me the answer"
+    "answer",
+    "solve",
+    "cheat",
+    "test",
+    "quiz",
+    "exam",
+    "assignment answer",
+    "what is the answer",
+    "give me the answer",
   ];
   return banned.some(b => userMessage.toLowerCase().includes(b));
 }
 
 // --- MAIN CHATBOT LOGIC ---
 async function handleStudentChat(userMessage: string) {
+  const msg = userMessage.toLowerCase();
 
-  if (blocksCheating(userMessage)) {
+  if (blocksCheating(msg)) {
     return "I can help explain concepts, but I cannot provide answers to tests, quizzes, or assignments.";
   }
 
-  if (userMessage.toLowerCase().includes("new castle school of trades")) {
+  if (msg.includes("new castle school of trades")) {
     return getNCSTInfo();
   }
 
   if (
-    userMessage.toLowerCase().includes("study") ||
-    userMessage.toLowerCase().includes("tips") ||
-    userMessage.toLowerCase().includes("help me study")
+    msg.includes("study") ||
+    msg.includes("tips") ||
+    msg.includes("help me study")
   ) {
     return getStudyAdvice();
   }
 
-  const results = await searchCanvasGuide(userMessage);
+  const results = searchCanvasGuide(userMessage);
 
   if (results.length > 0) {
     return {
       message: "Here are the closest Canvas Student Guide articles:",
-      results
+      results,
     };
   }
 
