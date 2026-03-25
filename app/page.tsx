@@ -257,7 +257,7 @@ function ChatWindow({
 }: {
   messages: Message[];
   loading: boolean;
-  chatEndRef: RefObject<HTMLDivElement>;
+chatEndRef: RefObject<HTMLDivElement | null>;
   theme: "light" | "dark";
 }) {
   const isDark = theme === "dark";
