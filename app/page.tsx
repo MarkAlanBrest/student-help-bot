@@ -7,107 +7,68 @@ import remarkGfm from "remark-gfm";
 type Message = {
   role: "user" | "assistant";
   text: string;
-  video?: string;
   helpLink?: string;
   fileName?: string;
 };
 
 /* ===============================
-   ✅ APPROVED RESOURCES ONLY
-   🔴 PUT YOUR REAL VIDEO LINKS
+   OFFICIAL GUIDE LINKS ONLY
 ================================ */
 
 const CanvasResources = [
   {
     keywords: [
-      "submit","submission","turn in","turnin","upload",
-      "hand in","send assignment","post assignment",
-      "submit work","assignment upload","cant submit",
-      "won't submit","missing submit","send homework",
-      "turn work in","upload paper"
+      "submit","submission","turn in","upload",
+      "hand in","send assignment","homework"
     ],
-    video: "VIDEO_LINK_SUBMIT",
     guide:
       "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/416664",
   },
 
   {
     keywords: [
-      "grade","grades","score","scores","feedback",
-      "points","mark","marks","result","results",
-      "see grade","check grade","where is my grade",
-      "graded","not graded","view grade"
+      "grade","grades","score","feedback",
+      "points","results","mark"
     ],
-    video: "VIDEO_LINK_GRADES",
     guide:
       "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/416653",
   },
 
   {
     keywords: [
-      "discussion","reply","post","comment","forum",
-      "discussion board","respond","response",
-      "write reply","add reply","discussion post"
+      "discussion","reply","post","comment","forum"
     ],
-    video: "VIDEO_LINK_DISCUSSION",
     guide:
       "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/416663",
   },
 
   {
     keywords: [
-      "module","modules","lesson","lessons",
-      "course content","course work","units",
-      "topics","where is the work","next item",
-      "open module","navigate course"
+      "module","lesson","course content","units"
     ],
-    video: "VIDEO_LINK_MODULES",
     guide:
       "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-modules/ta-p/416655",
   },
 
   {
     keywords: [
-      "quiz","test","exam","assessment",
-      "take quiz","start quiz","begin test",
-      "online test","questions","attempt quiz"
+      "quiz","test","exam","assessment"
     ],
-    video: "VIDEO_LINK_QUIZ",
     guide:
       "https://community.canvaslms.com/t5/Student-Guide/How-do-I-take-a-quiz/ta-p/416660",
   }
 ];
 
-/* ===============================
-   🔎 FIND BEST MATCH
-================================ */
-
-function getCanvasResource(question: string) {
+function getCanvasGuide(question: string) {
   const q = question.toLowerCase();
 
   for (const item of CanvasResources) {
     if (item.keywords.some((k) => q.includes(k))) {
-      return item;
+      return item.guide;
     }
   }
 
-  // Fallback guesses
-  if (q.includes("assignment") || q.includes("homework"))
-    return CanvasResources[0];
-
-  if (q.includes("grade"))
-    return CanvasResources[1];
-
-  if (q.includes("discussion"))
-    return CanvasResources[2];
-
-  if (q.includes("module") || q.includes("lesson"))
-    return CanvasResources[3];
-
-  if (q.includes("quiz") || q.includes("test"))
-    return CanvasResources[4];
-
-  return null;
+  return "";
 }
 
 export default function Home() {
@@ -135,7 +96,7 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
-    /* ===== AI TEXT RESPONSE ===== */
+    /* ===== AI RESPONSE ===== */
 
     let answer = "⚠️ Unable to get response.";
 
@@ -150,15 +111,14 @@ export default function Home() {
       answer = data.answer || answer;
     } catch {}
 
-    /* ===== RESOURCE MATCH ===== */
+    /* ===== GUIDE MATCH ===== */
 
-    const resource = getCanvasResource(question);
+    const guide = getCanvasGuide(question);
 
     const botMessage: Message = {
       role: "assistant",
       text: answer,
-      video: resource?.video,
-      helpLink: resource?.guide,
+      helpLink: guide || undefined,
     };
 
     setMessages((prev) => [...prev, botMessage]);
@@ -213,18 +173,6 @@ export default function Home() {
                 <p className="text-sm mt-2 opacity-80">📎 {msg.fileName}</p>
               )}
 
-              {/* VIDEO (approved only) */}
-              {msg.video && (
-                <iframe
-                  className="mt-3 w-full rounded"
-                  height="260"
-                  src={msg.video}
-                  title="Canvas Tutorial"
-                  allowFullScreen
-                />
-              )}
-
-              {/* OFFICIAL GUIDE */}
               {msg.helpLink && (
                 <a
                   href={msg.helpLink}
