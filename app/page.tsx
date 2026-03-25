@@ -7,9 +7,72 @@ import remarkGfm from "remark-gfm";
 type Message = {
   role: "user" | "assistant";
   text: string;
-  video?: string;
+  video?: string;   // link to official video page
   fileName?: string;
 };
+
+/* -----------------------------
+   OBVIOUS ANSWERS (no AI call)
+--------------------------------*/
+function getQuickAnswer(q: string): string | null {
+  const s = q.toLowerCase();
+
+  if (s.includes("submit") && s.includes("assignment")) {
+    return `📤 **How to submit an assignment in Canvas**
+
+1. Open your course  
+2. Click **Assignments**  
+3. Select the assignment  
+4. Click **Submit Assignment**  
+5. Upload your file or enter text  
+6. Click **Submit**
+
+You should see a confirmation when it is successfully submitted.`;
+  }
+
+  if (s.includes("view") && s.includes("grade")) {
+    return `📊 **How to view grades in Canvas**
+
+1. Open your course  
+2. Click **Grades** in the left menu  
+3. Review scores and feedback  
+4. Click an assignment for details`;
+  }
+
+  if (s.includes("discussion")) {
+    return `💬 **How to reply to a discussion**
+
+1. Open your course  
+2. Click **Discussions**  
+3. Select the discussion  
+4. Click **Reply**  
+5. Type your response  
+6. Click **Post Reply**`;
+  }
+
+  return null;
+}
+
+/* -----------------------------
+   OFFICIAL VIDEO PAGES
+--------------------------------*/
+function getCanvasVideo(question: string): string {
+  const q = question.toLowerCase();
+
+  if (q.includes("submit") || q.includes("upload") || q.includes("turn in"))
+    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-submit-an-online-assignment/ta-p/384020";
+
+  if (q.includes("grade") || q.includes("score") || q.includes("feedback"))
+    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/384071";
+
+  if (q.includes("discussion") || q.includes("reply") || q.includes("post"))
+    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/384013";
+
+  if (q.includes("module") || q.includes("lesson"))
+    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-view-modules/ta-p/384038";
+
+  return "";
+}
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,45 +99,34 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
+    /* ---- Quick answers first ---- */
+    const quick = getQuickAnswer(question);
 
-      if (!res.ok) {
-        throw new Error("Server error");
+    let answer = quick;
+    if (!quick) {
+      try {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+
+        const data = await res.json();
+        answer = data.answer || "No response.";
+      } catch {
+        answer = "⚠️ Unable to contact help service.";
       }
-
-      const data = await res.json();
-
-      // 🔎 Simple video triggers (expand anytime)
-      let videoUrl = "";
-      const q = question.toLowerCase();
-
-      if (q.includes("submit")) {
-        videoUrl = "https://www.youtube.com/embed/5I1wq0WzW9k";
-      } else if (q.includes("grade")) {
-        videoUrl = "https://www.youtube.com/embed/qM9J2S9k5l4";
-      }
-
-      const botMessage: Message = {
-        role: "assistant",
-        text: data.answer || "No response.",
-        video: videoUrl || undefined,
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: "⚠️ Something went wrong. Please try again.",
-        },
-      ]);
     }
+
+    const videoUrl = getCanvasVideo(question);
+
+    const botMessage: Message = {
+      role: "assistant",
+      text: answer || "No response.",
+      video: videoUrl || undefined,
+    };
+
+    setMessages((prev) => [...prev, botMessage]);
 
     setQuestion("");
     setFile(null);
@@ -112,47 +164,28 @@ export default function Home() {
                   : "bg-white border"
               }`}
             >
-              {/* Markdown Output */}
-              
-              
-              
-         <div
-  className={`prose max-w-none leading-relaxed
-    prose-headings:text-blue-900
-    prose-a:text-blue-700
-    prose-strong:text-slate-900
-    ${
-      msg.role === "user"
-        ? "prose-invert text-white"
-        : "prose-slate"
-    }
-  `}
->
-  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-    {msg.text}
-  </ReactMarkdown>
-</div>
+              <div
+                className={`prose max-w-none ${
+                  msg.role === "user" ? "prose-invert" : "prose-slate"
+                }`}
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.text}
+                </ReactMarkdown>
+              </div>
 
-
-
-
-
-              {/* File name */}
               {msg.fileName && (
-                <p className="text-sm mt-2 opacity-80">
-                  📎 {msg.fileName}
-                </p>
+                <p className="text-sm mt-2 opacity-80">📎 {msg.fileName}</p>
               )}
 
-              {/* Inline Video */}
               {msg.video && (
-                <iframe
-                  className="mt-3 w-full rounded"
-                  height="250"
-                  src={msg.video}
-                  title="Help Video"
-                  allowFullScreen
-                />
+                <a
+                  href={msg.video}
+                  target="_blank"
+                  className="block mt-3 text-blue-700 underline"
+                >
+                  ▶ Official Canvas tutorial video
+                </a>
               )}
             </div>
           ))}
@@ -167,7 +200,6 @@ export default function Home() {
         {/* Input Bar */}
         <div className="border-t bg-white p-4 flex items-center gap-3 rounded-b-2xl">
 
-          {/* Upload Button */}
           <label className="cursor-pointer bg-slate-200 px-3 py-2 rounded hover:bg-slate-300">
             📎
             <input
@@ -177,14 +209,12 @@ export default function Home() {
             />
           </label>
 
-          {/* Show selected file */}
           {file && (
             <span className="text-sm text-slate-600 truncate max-w-[150px]">
               {file.name}
             </span>
           )}
 
-          {/* Text Input */}
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
@@ -195,14 +225,12 @@ export default function Home() {
             }}
           />
 
-          {/* Send Button */}
           <button
             onClick={handleSend}
             className="bg-blue-900 text-white px-5 py-2 rounded hover:bg-blue-800"
           >
             Send
           </button>
-
         </div>
       </div>
     </main>
