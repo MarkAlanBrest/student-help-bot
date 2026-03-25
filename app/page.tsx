@@ -53,11 +53,24 @@ export default function Home() {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question }),   // ⭐ FIXED
-      }); 
+        body: JSON.stringify({ message: question }),
+      });
 
       const data = await res.json();
-      answer = data.reply || answer;                   // ⭐ FIXED
+
+      // ✅ FIX — HANDLE STRING OR OBJECT REPLIES
+      if (typeof data.reply === "string") {
+        answer = data.reply;
+      } else if (data.reply?.message) {
+        const links = data.reply.results
+          ?.map((r: any) => `• [${r.title}](${r.url})`)
+          .join("\n");
+
+        answer = `${data.reply.message}\n\n${links || ""}`;
+      } else {
+        answer = "I found some information for you.";
+      }
+
     } catch {
       answer = "I couldn’t reach the AI service.";
     }
