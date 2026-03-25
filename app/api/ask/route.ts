@@ -1,3 +1,6 @@
+import { NextResponse } from "next/server";
+
+
 // --- CANVAS STUDENT GUIDE SEARCH (NO VIDEOS) ---
 async function searchCanvasGuide(query: string) {
   const res = await fetch(
@@ -7,7 +10,6 @@ async function searchCanvasGuide(query: string) {
 
   const html = await res.text();
 
-  // Extract article titles + URLs from search results
   const matches = [...html.matchAll(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/g)];
 
   return matches
@@ -19,6 +21,7 @@ async function searchCanvasGuide(query: string) {
     }));
 }
 
+
 // --- STUDY ADVICE ---
 function getStudyAdvice() {
   return [
@@ -29,6 +32,7 @@ function getStudyAdvice() {
     "Message instructors early if confused."
   ];
 }
+
 
 // --- NEW CASTLE SCHOOL OF TRADES INFO ---
 function getNCSTInfo() {
@@ -52,6 +56,7 @@ function getNCSTInfo() {
   };
 }
 
+
 // --- BLOCK TEST/ASSIGNMENT ANSWERS ---
 function blocksCheating(userMessage: string) {
   const banned = [
@@ -61,28 +66,28 @@ function blocksCheating(userMessage: string) {
   return banned.some(b => userMessage.toLowerCase().includes(b));
 }
 
-// --- MAIN CHATBOT HANDLER ---
-export async function handleStudentChat(userMessage: string) {
 
-  // Block cheating
+// --- MAIN CHATBOT LOGIC ---
+async function handleStudentChat(userMessage: string) {
+
   if (blocksCheating(userMessage)) {
     return "I can help explain concepts, but I cannot provide answers to tests, quizzes, or assignments.";
   }
 
-  // NCST info
   if (userMessage.toLowerCase().includes("new castle school of trades")) {
     return getNCSTInfo();
   }
 
-  // Study advice
-  if (userMessage.toLowerCase().includes("study") ||
-      userMessage.toLowerCase().includes("tips") ||
-      userMessage.toLowerCase().includes("help me study")) {
+  if (
+    userMessage.toLowerCase().includes("study") ||
+    userMessage.toLowerCase().includes("tips") ||
+    userMessage.toLowerCase().includes("help me study")
+  ) {
     return getStudyAdvice();
   }
 
-  // Canvas Guide search
   const results = await searchCanvasGuide(userMessage);
+
   if (results.length > 0) {
     return {
       message: "Here are the closest Canvas Student Guide articles:",
@@ -90,6 +95,15 @@ export async function handleStudentChat(userMessage: string) {
     };
   }
 
-  // Fallback
   return "I couldn’t find anything in the Canvas Student Guide. Try rephrasing your question.";
+}
+
+
+// ✅ REQUIRED APP ROUTER HANDLER
+export async function POST(request: Request) {
+  const { message } = await request.json();
+
+  const reply = await handleStudentChat(message);
+
+  return NextResponse.json({ reply });
 }
