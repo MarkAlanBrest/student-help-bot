@@ -1,98 +1,95 @@
-import { NextResponse } from "next/server";
+// --- CANVAS STUDENT GUIDE SEARCH (NO VIDEOS) ---
+async function searchCanvasGuide(query: string) {
+  const res = await fetch(
+    `https://community.instructure.com/en/kb/canvas-lms-student-guide/search?q=${encodeURIComponent(query)}`,
+    { method: "GET" }
+  );
 
-export async function POST(req: Request) {
-  const { question } = await req.json();
-  const q = question.toLowerCase();
+  const html = await res.text();
 
-  let answer = "I'm here to help! Can you tell me more about what you're trying to do?";
+  // Extract article titles + URLs from search results
+  const matches = [...html.matchAll(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/g)];
 
-  // --- BASIC BUILT‑IN HELP RESPONSES ---
-  if (q.includes("submit") && q.includes("assignment")) {
-    answer = `
-Here’s how to submit an assignment in Canvas:
+  return matches
+    .filter(m => m[1].includes("/kb/articles/"))
+    .slice(0, 5)
+    .map(m => ({
+      title: m[2].replace(/<[^>]+>/g, ""),
+      url: "https://community.instructure.com" + m[1]
+    }));
+}
 
-1. Go to **Courses** and open your class  
-2. Click **Assignments** in the left menu  
-3. Select the assignment you want to submit  
-4. Click the **Start Assignment** button  
-5. Choose your submission type:
-   - **File Upload** (upload a document)
-   - **Text Entry** (type your answer)
-   - **Media Recording** (record audio/video)
-   - **Google Drive / OneDrive** (attach a cloud file)
-6. Click **Submit Assignment**  
-7. Look for the green **Submitted!** checkmark
+// --- STUDY ADVICE ---
+function getStudyAdvice() {
+  return [
+    "Use the Canvas Calendar to track due dates.",
+    "Break work into small tasks and schedule them.",
+    "Use active recall and spaced repetition.",
+    "Check announcements daily.",
+    "Message instructors early if confused."
+  ];
+}
 
-Let me know if you want screenshots or help finding the assignment.
-`;
+// --- NEW CASTLE SCHOOL OF TRADES INFO ---
+function getNCSTInfo() {
+  return {
+    name: "New Castle School of Trades",
+    locations: ["New Castle, PA", "East Liverpool, OH"],
+    programs: [
+      "Automotive Technology",
+      "Diesel Technology",
+      "Welding",
+      "Electrical",
+      "HVAC",
+      "CNC Machining",
+      "Heavy Equipment"
+    ],
+    notes: [
+      "Private trade school offering certificates and associate degrees.",
+      "Provides job placement assistance.",
+      "Financial aid available for eligible students."
+    ]
+  };
+}
+
+// --- BLOCK TEST/ASSIGNMENT ANSWERS ---
+function blocksCheating(userMessage: string) {
+  const banned = [
+    "answer", "solve", "cheat", "test", "quiz", "exam",
+    "assignment answer", "what is the answer", "give me the answer"
+  ];
+  return banned.some(b => userMessage.toLowerCase().includes(b));
+}
+
+// --- MAIN CHATBOT HANDLER ---
+export async function handleStudentChat(userMessage: string) {
+
+  // Block cheating
+  if (blocksCheating(userMessage)) {
+    return "I can help explain concepts, but I cannot provide answers to tests, quizzes, or assignments.";
   }
 
-  else if (q.includes("grades") || q.includes("gradebook")) {
-    answer = `
-To view your grades in Canvas:
-
-1. Open your course  
-2. Click **Grades** in the left menu  
-3. You’ll see:
-   - Your score on each assignment  
-   - Teacher comments  
-   - Due dates  
-   - Missing or late work  
-4. Click any assignment to see details or resubmit (if allowed)
-
-If you want, I can help you interpret the grade symbols too.
-`;
+  // NCST info
+  if (userMessage.toLowerCase().includes("new castle school of trades")) {
+    return getNCSTInfo();
   }
 
-  else if (q.includes("message") || q.includes("inbox")) {
-    answer = `
-To message your teacher in Canvas:
-
-1. Click the **Inbox** icon on the left  
-2. Click **Compose Message**  
-3. Choose your course  
-4. Select your teacher  
-5. Type your message  
-6. Click **Send**
-
-Teachers receive it instantly inside Canvas.
-`;
+  // Study advice
+  if (userMessage.toLowerCase().includes("study") ||
+      userMessage.toLowerCase().includes("tips") ||
+      userMessage.toLowerCase().includes("help me study")) {
+    return getStudyAdvice();
   }
 
-  else if (q.includes("quiz")) {
-    answer = `
-To take a quiz in Canvas:
-
-1. Open your course  
-2. Click **Quizzes**  
-3. Select the quiz  
-4. Click **Take the Quiz**  
-5. Answer each question  
-6. Click **Submit Quiz** when finished  
-
-Some quizzes allow multiple attempts — I can help you check that too.
-`;
+  // Canvas Guide search
+  const results = await searchCanvasGuide(userMessage);
+  if (results.length > 0) {
+    return {
+      message: "Here are the closest Canvas Student Guide articles:",
+      results
+    };
   }
 
-  else if (q.includes("module")) {
-    answer = `
-Modules are your weekly or unit learning sections.
-
-To view them:
-
-1. Open your course  
-2. Click **Modules**  
-3. Work through items in order:
-   - Pages  
-   - Assignments  
-   - Quizzes  
-   - Discussions  
-   - Files  
-4. Completed items show a checkmark
-
-I can help you find a specific module if you want.
-`;
-  }
-
-  return NextResponse.json({ answer });
+  // Fallback
+  return "I couldn’t find anything in the Canvas Student Guide. Try rephrasing your question.";
 }
