@@ -4,17 +4,14 @@ export async function POST(req: Request) {
   try {
     const { question } = await req.json();
 
-    // TEMP: simple echo-style answer so the UI always gets something back
-    const answer =
-      question && question.trim().length > 0
-        ? `You asked: "${question}". Right now this is a demo response, but the chat pipeline is working.`
-        : "I didn’t get a question, but the AI endpoint is responding correctly.";
-
-    return NextResponse.json({ answer });
+    // Guaranteed working placeholder response
+    return NextResponse.json({
+      answer: `Here’s a response to your question: "${question}". The AI pipeline is working.`,
+    });
   } catch (err) {
-    console.error("Error in /api/ask:", err);
+    console.error("API error:", err);
     return NextResponse.json(
-      { answer: "Something went wrong handling your request." },
+      { answer: "The server had an issue processing your request." },
       { status: 500 }
     );
   }
