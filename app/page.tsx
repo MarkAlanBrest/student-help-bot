@@ -113,21 +113,29 @@ export default function Home() {
               }`}
             >
               {/* Markdown Output */}
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                className={`prose max-w-none leading-relaxed
-                  prose-headings:text-blue-900
-                  prose-a:text-blue-700
-                  prose-strong:text-slate-900
-                  ${
-                    msg.role === "user"
-                      ? "prose-invert text-white"
-                      : "prose-slate"
-                  }
-                `}
-              >
-                {msg.text}
-              </ReactMarkdown>
+              
+              
+              
+         <div
+  className={`prose max-w-none leading-relaxed
+    prose-headings:text-blue-900
+    prose-a:text-blue-700
+    prose-strong:text-slate-900
+    ${
+      msg.role === "user"
+        ? "prose-invert text-white"
+        : "prose-slate"
+    }
+  `}
+>
+  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+    {msg.text}
+  </ReactMarkdown>
+</div>
+
+
+
+
 
               {/* File name */}
               {msg.fileName && (
