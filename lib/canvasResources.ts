@@ -1,10 +1,8 @@
-// lib/canvasResources.ts
-
 export type CanvasResource = {
+  label: string;
   keywords: string[];
   guide: string;
   description: string;
-  label: string;
 };
 
 export const CanvasResources: CanvasResource[] = [
@@ -15,7 +13,7 @@ export const CanvasResources: CanvasResource[] = [
       "send assignment","homework","attach","file upload",
       "submit file","submit work","turn it in"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Assignments",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#assignments",
     description: "How to submit assignments, upload files, and view submission details."
   },
   {
@@ -24,7 +22,7 @@ export const CanvasResources: CanvasResource[] = [
       "grade","grades","score","feedback","points","results",
       "mark","rubric","grading","teacher comments","why is my grade"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Grades",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#grades",
     description: "How to view grades, rubric feedback, and instructor comments."
   },
   {
@@ -33,7 +31,7 @@ export const CanvasResources: CanvasResource[] = [
       "discussion","reply","post","comment","forum","thread",
       "respond","discussion board","participate","discussion post"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Discussions",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#discussions",
     description: "How to reply to discussions, post comments, and participate in forums."
   },
   {
@@ -42,7 +40,7 @@ export const CanvasResources: CanvasResource[] = [
       "module","lesson","course content","units","topics",
       "where is my work","content","materials","learning module"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Modules",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#modules",
     description: "How to navigate modules and find course materials."
   },
   {
@@ -51,7 +49,7 @@ export const CanvasResources: CanvasResource[] = [
       "quiz","test","exam","assessment","take quiz","start quiz",
       "timed quiz","quiz attempt","quiz results","quiz score"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Quizzes",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#quizzes",
     description: "How to take quizzes, view results, and understand quiz settings."
   },
   {
@@ -60,7 +58,7 @@ export const CanvasResources: CanvasResource[] = [
       "calendar","due dates","schedule","planner","events",
       "what's due","when is it due","calendar view","to do list"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Calendar",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#calendar",
     description: "How to use the Canvas calendar to track due dates and events."
   },
   {
@@ -69,7 +67,7 @@ export const CanvasResources: CanvasResource[] = [
       "inbox","message","email","contact teacher","send message",
       "communication","canvas inbox","conversation","dm teacher"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Inbox",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#inbox",
     description: "How to send messages to instructors and classmates using the Canvas Inbox."
   },
   {
@@ -78,7 +76,7 @@ export const CanvasResources: CanvasResource[] = [
       "files","documents","download","upload file","course files",
       "where are my files","file storage","view files"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Files",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#files",
     description: "How to access, download, and manage files in Canvas."
   },
   {
@@ -87,7 +85,7 @@ export const CanvasResources: CanvasResource[] = [
       "app","mobile","phone","ios","android","canvas app",
       "student app","mobile login","qr code login"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Mobile",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#mobile",
     description: "How to use the Canvas Student mobile app on iOS and Android."
   },
   {
@@ -96,7 +94,7 @@ export const CanvasResources: CanvasResource[] = [
       "announcement","announcements","teacher announcement",
       "class announcement","updates","notifications"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Announcements",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#announcements",
     description: "How to view course announcements and instructor updates."
   },
   {
@@ -105,7 +103,7 @@ export const CanvasResources: CanvasResource[] = [
       "group","groups","group work","collaboration","team",
       "peer group","group assignment","group page"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Groups",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#groups",
     description: "How to join groups, collaborate, and access group pages."
   },
   {
@@ -114,7 +112,7 @@ export const CanvasResources: CanvasResource[] = [
       "peer review","peer feedback","review classmate",
       "peer assignment","peer grading"
     ],
-    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student?labels=Peer+Review",
+    guide: "https://community.canvaslms.com/t5/Student-Guide/tkb-p/student#peerreview",
     description: "How to complete peer reviews and give feedback to classmates."
   }
 ];
