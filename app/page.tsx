@@ -36,125 +36,7 @@ type Message = {
   fileName?: string;
 };
 
-export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [question, setQuestion] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
-  }
-
-  async function handleSend() {
-    if (!question.trim() && !file) return;
-
-    const userMessage: Message = {
-      role: "user",
-      text: question || "(File uploaded)",
-      fileName: file?.name,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setLoading(true);
-
-    let answer = "I’m thinking about the best way to help with that…";
-
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
-
-      const data = await res.json();
-      answer = data.answer || answer;
-    } catch {
-      answer =
-        "I couldn’t reach the AI service, but here’s a Canvas guide that might help.";
-    }
-
-    const guideInfo = getCanvasGuide(question);
-
-    const botMessage: Message = {
-      role: "assistant",
-      text: answer,
-      helpLink: guideInfo?.guide,
-      helpDescription: guideInfo?.description,
-    };
-
-    setMessages((prev) => [...prev, botMessage]);
-
-    setQuestion("");
-    setFile(null);
-    setLoading(false);
-  }
-
-  function handleClear() {
-    setMessages([]);
-    setQuestion("");
-    setFile(null);
-  }
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
-  const isDark = theme === "dark";
-
-  return (
-    <main
-      className={`min-h-screen p-6 flex items-center justify-center transition-colors duration-300 ${
-        isDark
-          ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
-          : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
-      }`}
-    >
-      <div className="w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl backdrop-blur-xl bg-white/5 border border-white/10 flex overflow-hidden">
-        {/* SIDEBAR */}
-        <Sidebar theme={theme} />
-
-        {/* MAIN PANEL */}
-        <div className="flex-1 flex flex-col">
-          <TopNav theme={theme} setTheme={setTheme} />
-
-          <div className="flex flex-1 overflow-hidden">
-            {/* CHAT + INPUT */}
-            <div className="flex-1 flex flex-col">
-              <ChatWindow
-                messages={messages}
-                loading={loading}
-                chatEndRef={chatEndRef}
-                theme={theme}
-              />
-
-              <InputBar
-                question={question}
-                setQuestion={setQuestion}
-                file={file}
-                handleFileChange={handleFileChange}
-                handleSend={handleSend}
-                theme={theme}
-              />
-            </div>
-
-            {/* QUICK LINKS PANEL */}
-            <QuickLinksPanel theme={theme} />
-          </div>
-        </div>
-
-        {/* FLOATING ACTIONS */}
-        <FloatingActions onClear={handleClear} />
-      </div>
-    </main>
-  );
-}
-
-/* ========== COMPONENTS ========== */
+/* ========== COMPONENTS (ALL ABOVE Home) ========== */
 
 function Sidebar({ theme }: { theme: "light" | "dark" }) {
   const isDark = theme === "dark";
@@ -257,7 +139,7 @@ function ChatWindow({
 }: {
   messages: Message[];
   loading: boolean;
-chatEndRef: RefObject<HTMLDivElement | null>;
+  chatEndRef: RefObject<HTMLDivElement | null>;
   theme: "light" | "dark";
 }) {
   const isDark = theme === "dark";
@@ -473,5 +355,120 @@ function FloatingActions({ onClear }: { onClear: () => void }) {
         <HelpCircle size={18} />
       </button>
     </div>
+  );
+}
+
+/* ========== HOME (LAST) ========== */
+
+export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [question, setQuestion] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files?.[0];
+    if (selected) setFile(selected);
+  }
+
+  async function handleSend() {
+    if (!question.trim() && !file) return;
+
+    const userMessage: Message = {
+      role: "user",
+      text: question || "(File uploaded)",
+      fileName: file?.name,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setLoading(true);
+
+    let answer = "I’m thinking about the best way to help with that…";
+
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      const data = await res.json();
+      answer = data.answer || answer;
+    } catch {
+      answer =
+        "I couldn’t reach the AI service, but here’s a Canvas guide that might help.";
+    }
+
+    const guideInfo = getCanvasGuide(question);
+
+    const botMessage: Message = {
+      role: "assistant",
+      text: answer,
+      helpLink: guideInfo?.guide,
+      helpDescription: guideInfo?.description,
+    };
+
+    setMessages((prev) => [...prev, botMessage]);
+
+    setQuestion("");
+    setFile(null);
+    setLoading(false);
+  }
+
+  function handleClear() {
+    setMessages([]);
+    setQuestion("");
+    setFile(null);
+  }
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const isDark = theme === "dark";
+
+  return (
+    <main
+      className={`min-h-screen p-6 flex items-center justify-center transition-colors duration-300 ${
+        isDark
+          ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+          : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
+      }`}
+    >
+      <div className="w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl backdrop-blur-xl bg-white/5 border border-white/10 flex overflow-hidden">
+        <Sidebar theme={theme} />
+
+        <div className="flex-1 flex flex-col">
+          <TopNav theme={theme} setTheme={setTheme} />
+
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 flex flex-col">
+              <ChatWindow
+                messages={messages}
+                loading={loading}
+                chatEndRef={chatEndRef}
+                theme={theme}
+              />
+
+              <InputBar
+                question={question}
+                setQuestion={setQuestion}
+                file={file}
+                handleFileChange={handleFileChange}
+                handleSend={handleSend}
+                theme={theme}
+              />
+            </div>
+
+            <QuickLinksPanel theme={theme} />
+          </div>
+        </div>
+
+        <FloatingActions onClear={handleClear} />
+      </div>
+    </main>
   );
 }

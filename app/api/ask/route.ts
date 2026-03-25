@@ -4,14 +4,13 @@ export async function POST(req: Request) {
   try {
     const { question } = await req.json();
 
-    // Guaranteed working placeholder response
     return NextResponse.json({
-      answer: `Here’s a response to your question: "${question}". The AI pipeline is working.`,
+      answer: `AI is working. You asked: "${question}".`,
     });
   } catch (err) {
-    console.error("API error:", err);
+    console.error("Error in /api/ask:", err);
     return NextResponse.json(
-      { answer: "The server had an issue processing your request." },
+      { answer: "Something went wrong handling your request." },
       { status: 500 }
     );
   }
