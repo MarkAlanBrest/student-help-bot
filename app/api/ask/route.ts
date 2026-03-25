@@ -5,7 +5,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// 🔧 CHANGE THESE FOR YOUR REAL CANVAS
+// 🔧 CHANGE THESE FOR LOCAL TESTING
 const FALLBACK_HOST = "your-school.instructure.com";
 const FALLBACK_COURSE_ID = "12345";
 
@@ -21,7 +21,6 @@ function blocksCheating(msg: string) {
     "do my homework",
     "give me the answer",
   ];
-
   return banned.some(b => msg.toLowerCase().includes(b));
 }
 
@@ -38,6 +37,7 @@ function getCourseIdFromUrl(url: string) {
 
 // --- MAIN CHATBOT LOGIC ---
 async function handleStudentChat(userMessage: string, refererUrl: string) {
+
   // 1. Block cheating
   if (blocksCheating(userMessage)) {
     return "I can help explain concepts, but I cannot provide answers to tests, quizzes, or assignments.";
@@ -54,64 +54,43 @@ async function handleStudentChat(userMessage: string, refererUrl: string) {
       const fromUrl = getCourseIdFromUrl(refererUrl);
       if (fromUrl) courseId = fromUrl;
     } catch {
-      // fall back to constants
+      // fallback stays
     }
   }
 
   const baseUrl = `https://${host}/courses/${courseId}`;
   const text = userMessage.toLowerCase();
 
-  // 3. Keyword → Link mapping
+  // 3. Keyword → Link mapping (opens in new tab)
 
   // Grades
   if (
+    text.includes("grade") ||
+    text.includes("grades") ||
     text.includes("my grade") ||
-    text.includes("my grades") ||
-    text.includes("what's my grade") ||
-    text.includes("whats my grade") ||
-    text.includes("check my grade") ||
-    text.includes("view my grade") ||
-    text === "grade" ||
-    text === "grades" ||
-    text.includes("how am i doing")
+    text.includes("my grades")
   ) {
-    return `You can view your grades here:\n${baseUrl}/grades`;
+    return `You can view your grades here:<br><a href="${baseUrl}/grades" target="_blank" rel="noopener noreferrer">${baseUrl}/grades</a>`;
   }
 
   // Syllabus
-  if (
-    text.includes("syllabus") ||
-    text.includes("class outline") ||
-    text.includes("course outline")
-  ) {
-    return `Here is the syllabus for this course:\n${baseUrl}/assignments/syllabus`;
+  if (text.includes("syllabus")) {
+    return `Here is the syllabus:<br><a href="${baseUrl}/assignments/syllabus" target="_blank" rel="noopener noreferrer">${baseUrl}/assignments/syllabus</a>`;
   }
 
   // Assignments
-  if (
-    text.includes("assignment") ||
-    text.includes("assignments") ||
-    text.includes("homework")
-  ) {
-    return `You can view all assignments here:\n${baseUrl}/assignments`;
+  if (text.includes("assignment") || text.includes("assignments")) {
+    return `Here are your assignments:<br><a href="${baseUrl}/assignments" target="_blank" rel="noopener noreferrer">${baseUrl}/assignments</a>`;
   }
 
   // Modules
-  if (
-    text.includes("module") ||
-    text.includes("modules") ||
-    text.includes("course content")
-  ) {
-    return `You can view the course modules here:\n${baseUrl}/modules`;
+  if (text.includes("module") || text.includes("modules")) {
+    return `Here are your modules:<br><a href="${baseUrl}/modules" target="_blank" rel="noopener noreferrer">${baseUrl}/modules</a>`;
   }
 
   // Calendar
-  if (
-    text.includes("calendar") ||
-    text.includes("due dates") ||
-    text.includes("schedule")
-  ) {
-    return `Here is your course calendar:\n${baseUrl}/calendar?include_contexts=course_${courseId}`;
+  if (text.includes("calendar") || text.includes("due dates") || text.includes("schedule")) {
+    return `Here is your course calendar:<br><a href="${baseUrl}/calendar?include_contexts=course_${courseId}" target="_blank" rel="noopener noreferrer">${baseUrl}/calendar?include_contexts=course_${courseId}</a>`;
   }
 
   // 4. Normal AI response
@@ -143,8 +122,6 @@ Student question: ${userMessage}
 export async function POST(request: Request) {
   const { message } = await request.json();
   const refererUrl = request.headers.get("referer") || "";
-
   const reply = await handleStudentChat(message, refererUrl);
-
   return NextResponse.json({ reply });
 }
