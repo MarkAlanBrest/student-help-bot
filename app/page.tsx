@@ -41,7 +41,7 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
