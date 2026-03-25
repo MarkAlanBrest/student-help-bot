@@ -58,7 +58,6 @@ export default function Home() {
 
       const data = await res.json();
 
-      // ✅ FIX — HANDLE STRING OR OBJECT REPLIES
       if (typeof data.reply === "string") {
         answer = data.reply;
       } else if (data.reply?.message) {
@@ -70,7 +69,6 @@ export default function Home() {
       } else {
         answer = "I found some information for you.";
       }
-
     } catch {
       answer = "I couldn’t reach the AI service.";
     }
@@ -108,7 +106,7 @@ export default function Home() {
   return (
     <div className="w-full min-h-screen bg-slate-50 flex flex-col">
 
-      {/* TOP HEADER */}
+      {/* ================= HEADER ================= */}
       <div className="px-6 py-4 bg-white border-b border-slate-300 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageCircle size={22} className="text-blue-700" />
@@ -126,102 +124,123 @@ export default function Home() {
         </button>
       </div>
 
-      {/* CHAT AREA */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+      {/* ================= TOP ROW CONTENT ================= */}
+      <div className="flex-1 p-6">
+        <div className="bg-white rounded-2xl shadow border border-slate-300 p-6 h-full">
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">
+            Canvas Support Center
+          </h2>
 
-        {messages.length === 0 && (
-          <div className="text-center text-slate-500 mt-10">
-            Ask a question about Canvas, assignments, grades, or course tools.
-          </div>
-        )}
+          <p className="text-slate-600">
+            Put your existing page content here (guides, links, instructions, etc).
+            The AI assistant is available below.
+          </p>
+        </div>
+      </div>
 
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`max-w-2xl p-4 rounded-2xl shadow-sm ${
-              msg.role === "user"
-                ? "bg-blue-600 text-white ml-auto"
-                : "bg-white border border-slate-300 text-slate-900"
-            }`}
+      {/* ================= BOTTOM ROW — CHATBOT ================= */}
+      <div className="border-t bg-white flex flex-col">
+
+        {/* CHAT AREA */}
+        <div className="max-h-[40vh] overflow-y-auto px-6 py-6 space-y-5">
+
+          {messages.length === 0 && (
+            <div className="text-center text-slate-500 mt-6">
+              Ask a question about Canvas, assignments, grades, or course tools.
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`max-w-2xl p-4 rounded-2xl shadow-sm ${
+                msg.role === "user"
+                  ? "bg-blue-600 text-white ml-auto"
+                  : "bg-white border border-slate-300 text-slate-900"
+              }`}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {String(msg.text)}
+              </ReactMarkdown>
+
+              {msg.fileName && (
+                <p className="text-xs mt-2 opacity-80 flex items-center gap-1">
+                  <Paperclip size={14} /> {msg.fileName}
+                </p>
+              )}
+
+              {msg.helpLink && (
+                <a
+                  href={msg.helpLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 mt-3 text-xs font-medium underline"
+                >
+                  <LinkIcon size={14} />
+                  Canvas Guide
+                </a>
+              )}
+
+              {msg.helpDescription && (
+                <p className="text-xs mt-1 opacity-80">
+                  {msg.helpDescription}
+                </p>
+              )}
+            </div>
+          ))}
+
+          {typing && (
+            <div className="bg-white border border-slate-300 text-slate-600 px-4 py-3 rounded-xl w-fit">
+              Assistant is typing…
+            </div>
+          )}
+
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* INPUT BAR */}
+        <div className="border-t px-6 py-4 bg-white flex items-center gap-3">
+
+          <label className="cursor-pointer px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300">
+            <Paperclip size={18} />
+            <input type="file" onChange={handleFileChange} className="hidden" />
+          </label>
+
+          {file && (
+            <span className="text-xs opacity-80 truncate max-w-[160px]">
+              {file.name}
+            </span>
+          )}
+
+          <input
+            value={question}
+            onChange={(e) => {
+              setQuestion(e.target.value);
+              setPlaceholderVisible(false);
+            }}
+            onFocus={() => setPlaceholderVisible(false)}
+            placeholder={
+              placeholderVisible
+                ? "💡 Try asking: How do I submit an assignment?"
+                : ""
+            }
+            className="flex-1 rounded-xl px-4 py-3 bg-white border border-slate-300 text-sm placeholder-slate-400"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSend();
+            }}
+          />
+
+          <button
+            onClick={handleSend}
+            className="flex items-center gap-2 bg-blue-700 text-white px-5 py-3 rounded-xl hover:bg-blue-600 shadow"
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {String(msg.text)}
-            </ReactMarkdown>
+            <Send size={16} />
+            Send
+          </button>
 
-            {msg.fileName && (
-              <p className="text-xs mt-2 opacity-80 flex items-center gap-1">
-                <Paperclip size={14} /> {msg.fileName}
-              </p>
-            )}
-
-            {msg.helpLink && (
-              <a
-                href={msg.helpLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 mt-3 text-xs font-medium underline"
-              >
-                <LinkIcon size={14} />
-                Canvas Guide
-              </a>
-            )}
-
-            {msg.helpDescription && (
-              <p className="text-xs mt-1 opacity-80">{msg.helpDescription}</p>
-            )}
-          </div>
-        ))}
-
-        {typing && (
-          <div className="bg-white border border-slate-300 text-slate-600 px-4 py-3 rounded-xl w-fit">
-            Assistant is typing…
-          </div>
-        )}
-
-        <div ref={chatEndRef} />
+        </div>
       </div>
 
-      {/* INPUT BAR */}
-      <div className="border-t px-6 py-4 bg-white flex items-center gap-3">
-
-        <label className="cursor-pointer px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300">
-          <Paperclip size={18} />
-          <input type="file" onChange={handleFileChange} className="hidden" />
-        </label>
-
-        {file && (
-          <span className="text-xs opacity-80 truncate max-w-[160px]">
-            {file.name}
-          </span>
-        )}
-
-        <input
-          value={question}
-          onChange={(e) => {
-            setQuestion(e.target.value);
-            setPlaceholderVisible(false);
-          }}
-          onFocus={() => setPlaceholderVisible(false)}
-          placeholder={
-            placeholderVisible
-              ? "💡 Try asking: How do I submit an assignment?"
-              : ""
-          }
-          className="flex-1 rounded-xl px-4 py-3 bg-white border border-slate-300 text-sm placeholder-slate-400"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
-          }}
-        />
-
-        <button
-          onClick={handleSend}
-          className="flex items-center gap-2 bg-blue-700 text-white px-5 py-3 rounded-xl hover:bg-blue-600 shadow"
-        >
-          <Send size={16} />
-          Send
-        </button>
-
-      </div>
     </div>
   );
 }
