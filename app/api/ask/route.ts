@@ -1,29 +1,26 @@
 import { NextResponse } from "next/server";
 
+
 // --- CANVAS STUDENT GUIDE SEARCH (NO VIDEOS) ---
 async function searchCanvasGuide(query: string) {
-  try {
-    const res = await fetch(
-      `https://community.instructure.com/en/kb/canvas-lms-student-guide/search?q=${encodeURIComponent(query)}`,
-      { method: "GET" }
-    );
+  const res = await fetch(
+    `https://community.instructure.com/en/kb/canvas-lms-student-guide/search?q=${encodeURIComponent(query)}`,
+    { method: "GET" }
+  );
 
-    const html = await res.text();
+  const html = await res.text();
 
-    const matches = [...html.matchAll(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/g)];
+  const matches = [...html.matchAll(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/g)];
 
-    return matches
-      .filter(m => m[1].includes("/kb/articles/"))
-      .slice(0, 5)
-      .map(m => ({
-        title: m[2].replace(/<[^>]+>/g, ""),
-        url: "https://community.instructure.com" + m[1]
-      }));
-  } catch (err) {
-    console.error("Canvas search failed:", err);
-    return [];
-  }
+  return matches
+    .filter(m => m[1].includes("/kb/articles/"))
+    .slice(0, 5)
+    .map(m => ({
+      title: m[2].replace(/<[^>]+>/g, ""),
+      url: "https://community.instructure.com" + m[1]
+    }));
 }
+
 
 // --- STUDY ADVICE ---
 function getStudyAdvice() {
@@ -35,6 +32,7 @@ function getStudyAdvice() {
     "Message instructors early if confused."
   ];
 }
+
 
 // --- NEW CASTLE SCHOOL OF TRADES INFO ---
 function getNCSTInfo() {
@@ -58,6 +56,7 @@ function getNCSTInfo() {
   };
 }
 
+
 // --- BLOCK TEST/ASSIGNMENT ANSWERS ---
 function blocksCheating(userMessage: string) {
   const banned = [
@@ -66,6 +65,7 @@ function blocksCheating(userMessage: string) {
   ];
   return banned.some(b => userMessage.toLowerCase().includes(b));
 }
+
 
 // --- MAIN CHATBOT LOGIC ---
 async function handleStudentChat(userMessage: string) {
@@ -98,28 +98,12 @@ async function handleStudentChat(userMessage: string) {
   return "I couldn’t find anything in the Canvas Student Guide. Try rephrasing your question.";
 }
 
-// --- SAFE API ROUTE (FIXED) ---
+
+// ✅ REQUIRED APP ROUTER HANDLER
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
+  const { message } = await request.json();
 
-    if (!body || !body.message) {
-      return NextResponse.json(
-        { error: "Missing 'message' field" },
-        { status: 400 }
-      );
-    }
+  const reply = await handleStudentChat(message);
 
-    const reply = await handleStudentChat(body.message);
-
-    return NextResponse.json({ reply });
-
-  } catch (err) {
-    console.error("API ROUTE ERROR:", err);
-
-    return NextResponse.json(
-      { error: "AI service unreachable" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({ reply });
 }

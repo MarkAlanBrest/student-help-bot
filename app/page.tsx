@@ -50,6 +50,7 @@ export default function Home() {
     let answer = "I’m thinking about that…";
 
     try {
+      
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
