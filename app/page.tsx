@@ -1,7 +1,8 @@
 "use client";
+
+import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useState, useRef, useEffect } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -33,34 +34,51 @@ export default function Home() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setQuestion("");
     setLoading(true);
 
-    const res = await fetch("/api/ask", {
-      method: "POST",
-      body: JSON.stringify({ question }),
-    });
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
 
-    const data = await res.json();
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
 
-    let videoUrl = "";
+      const data = await res.json();
 
-    const q = question.toLowerCase();
-    if (q.includes("submit")) {
-      videoUrl = "https://www.youtube.com/embed/5I1wq0WzW9k";
-    } else if (q.includes("grade")) {
-      videoUrl = "https://www.youtube.com/embed/qM9J2S9k5l4";
+      // 🔎 Simple video triggers (expand anytime)
+      let videoUrl = "";
+      const q = question.toLowerCase();
+
+      if (q.includes("submit")) {
+        videoUrl = "https://www.youtube.com/embed/5I1wq0WzW9k";
+      } else if (q.includes("grade")) {
+        videoUrl = "https://www.youtube.com/embed/qM9J2S9k5l4";
+      }
+
+      const botMessage: Message = {
+        role: "assistant",
+        text: data.answer || "No response.",
+        video: videoUrl || undefined,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: "⚠️ Something went wrong. Please try again.",
+        },
+      ]);
     }
 
-    const botMessage: Message = {
-      role: "assistant",
-      text: data.answer,
-      video: videoUrl || undefined,
-    };
-
-    setMessages((prev) => [...prev, botMessage]);
-    setLoading(false);
+    setQuestion("");
     setFile(null);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -94,18 +112,31 @@ export default function Home() {
                   : "bg-white border"
               }`}
             >
-<ReactMarkdown
-  remarkPlugins={[remarkGfm]}
-  className="prose max-w-none prose-slate"
->
-  {msg.text}
-</ReactMarkdown>
+              {/* Markdown Output */}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                className={`prose max-w-none leading-relaxed
+                  prose-headings:text-blue-900
+                  prose-a:text-blue-700
+                  prose-strong:text-slate-900
+                  ${
+                    msg.role === "user"
+                      ? "prose-invert text-white"
+                      : "prose-slate"
+                  }
+                `}
+              >
+                {msg.text}
+              </ReactMarkdown>
+
+              {/* File name */}
               {msg.fileName && (
                 <p className="text-sm mt-2 opacity-80">
                   📎 {msg.fileName}
                 </p>
               )}
 
+              {/* Inline Video */}
               {msg.video && (
                 <iframe
                   className="mt-3 w-full rounded"
