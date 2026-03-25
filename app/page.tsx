@@ -7,7 +7,6 @@ import remarkGfm from "remark-gfm";
 type Message = {
   role: "user" | "assistant";
   text: string;
-  video?: string;   // YouTube embed (approved only)
   helpLink?: string; // Official Canvas guide
   fileName?: string;
 };
@@ -55,44 +54,24 @@ You will see a confirmation when it is successful.`;
 }
 
 /* ===============================
-   OFFICIAL RESOURCES ONLY
+   OFFICIAL CANVAS GUIDES ONLY
 ================================ */
-function getOfficialResources(question: string) {
+function getOfficialGuide(question: string): string {
   const q = question.toLowerCase();
 
-  // Submit assignment
   if (q.includes("submit") || q.includes("upload") || q.includes("turn in"))
-    return {
-      video: "https://www.youtube.com/embed/qz9Q6X8t8sA",
-      helpLink:
-        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/416664",
-    };
+    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/416664";
 
-  // Grades
   if (q.includes("grade") || q.includes("score") || q.includes("feedback"))
-    return {
-      video: "https://www.youtube.com/embed/2k4oJ9XK9p4",
-      helpLink:
-        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/416653",
-    };
+    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/416653";
 
-  // Discussion
   if (q.includes("discussion") || q.includes("reply") || q.includes("post"))
-    return {
-      video: "https://www.youtube.com/embed/5k3K7F5zHqA",
-      helpLink:
-        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/416663",
-    };
+    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/416663";
 
-  // Modules
   if (q.includes("module") || q.includes("lesson"))
-    return {
-      video: "https://www.youtube.com/embed/bG7wWq9M9T0",
-      helpLink:
-        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-modules/ta-p/416655",
-    };
+    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-modules/ta-p/416655";
 
-  return {};
+  return "";
 }
 
 export default function Home() {
@@ -140,13 +119,12 @@ export default function Home() {
       }
     }
 
-    const resources = getOfficialResources(question);
+    const helpLink = getOfficialGuide(question);
 
     const botMessage: Message = {
       role: "assistant",
       text: answer || "No response.",
-      video: resources.video,
-      helpLink: resources.helpLink,
+      helpLink: helpLink || undefined,
     };
 
     setMessages((prev) => [...prev, botMessage]);
@@ -201,23 +179,12 @@ export default function Home() {
                 <p className="text-sm mt-2 opacity-80">📎 {msg.fileName}</p>
               )}
 
-              {/* Official video */}
-              {msg.video && (
-                <iframe
-                  className="mt-3 w-full rounded"
-                  height="260"
-                  src={msg.video}
-                  title="Canvas Tutorial"
-                  allowFullScreen
-                />
-              )}
-
-              {/* Official guide link */}
               {msg.helpLink && (
                 <a
                   href={msg.helpLink}
                   target="_blank"
-                  className="block mt-2 text-blue-700 underline"
+                  rel="noopener noreferrer"
+                  className="block mt-3 text-blue-700 underline font-medium"
                 >
                   📘 Official Canvas guide
                 </a>
