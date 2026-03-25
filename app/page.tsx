@@ -7,18 +7,19 @@ import remarkGfm from "remark-gfm";
 type Message = {
   role: "user" | "assistant";
   text: string;
-  video?: string;   // link to official video page
+  video?: string;   // YouTube embed (approved only)
+  helpLink?: string; // Official Canvas guide
   fileName?: string;
 };
 
-/* -----------------------------
-   OBVIOUS ANSWERS (no AI call)
---------------------------------*/
+/* ===============================
+   QUICK SAFE ANSWERS (NO AI)
+================================ */
 function getQuickAnswer(q: string): string | null {
   const s = q.toLowerCase();
 
   if (s.includes("submit") && s.includes("assignment")) {
-    return `📤 **How to submit an assignment in Canvas**
+    return `📤 **Submit an Assignment in Canvas**
 
 1. Open your course  
 2. Click **Assignments**  
@@ -27,24 +28,24 @@ function getQuickAnswer(q: string): string | null {
 5. Upload your file or enter text  
 6. Click **Submit**
 
-You should see a confirmation when it is successfully submitted.`;
+You will see a confirmation when it is successful.`;
   }
 
   if (s.includes("view") && s.includes("grade")) {
-    return `📊 **How to view grades in Canvas**
+    return `📊 **View Your Grades**
 
 1. Open your course  
-2. Click **Grades** in the left menu  
+2. Click **Grades**  
 3. Review scores and feedback  
-4. Click an assignment for details`;
+4. Click an item for details`;
   }
 
   if (s.includes("discussion")) {
-    return `💬 **How to reply to a discussion**
+    return `💬 **Reply to a Discussion**
 
 1. Open your course  
 2. Click **Discussions**  
-3. Select the discussion  
+3. Open the discussion  
 4. Click **Reply**  
 5. Type your response  
 6. Click **Post Reply**`;
@@ -53,25 +54,45 @@ You should see a confirmation when it is successfully submitted.`;
   return null;
 }
 
-/* -----------------------------
-   OFFICIAL VIDEO PAGES
---------------------------------*/
-function getCanvasVideo(question: string): string {
+/* ===============================
+   OFFICIAL RESOURCES ONLY
+================================ */
+function getOfficialResources(question: string) {
   const q = question.toLowerCase();
 
+  // Submit assignment
   if (q.includes("submit") || q.includes("upload") || q.includes("turn in"))
-    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-submit-an-online-assignment/ta-p/384020";
+    return {
+      video: "https://www.youtube.com/embed/qz9Q6X8t8sA",
+      helpLink:
+        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/416664",
+    };
 
+  // Grades
   if (q.includes("grade") || q.includes("score") || q.includes("feedback"))
-    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/384071";
+    return {
+      video: "https://www.youtube.com/embed/2k4oJ9XK9p4",
+      helpLink:
+        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/416653",
+    };
 
+  // Discussion
   if (q.includes("discussion") || q.includes("reply") || q.includes("post"))
-    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/384013";
+    return {
+      video: "https://www.youtube.com/embed/5k3K7F5zHqA",
+      helpLink:
+        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/416663",
+    };
 
+  // Modules
   if (q.includes("module") || q.includes("lesson"))
-    return "https://community.canvaslms.com/t5/Video-Guide/How-do-I-view-modules/ta-p/384038";
+    return {
+      video: "https://www.youtube.com/embed/bG7wWq9M9T0",
+      helpLink:
+        "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-modules/ta-p/416655",
+    };
 
-  return "";
+  return {};
 }
 
 export default function Home() {
@@ -99,10 +120,11 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
-    /* ---- Quick answers first ---- */
+    /* ----- Quick answers first ----- */
     const quick = getQuickAnswer(question);
 
     let answer = quick;
+
     if (!quick) {
       try {
         const res = await fetch("/api/ask", {
@@ -118,12 +140,13 @@ export default function Home() {
       }
     }
 
-    const videoUrl = getCanvasVideo(question);
+    const resources = getOfficialResources(question);
 
     const botMessage: Message = {
       role: "assistant",
       text: answer || "No response.",
-      video: videoUrl || undefined,
+      video: resources.video,
+      helpLink: resources.helpLink,
     };
 
     setMessages((prev) => [...prev, botMessage]);
@@ -178,13 +201,25 @@ export default function Home() {
                 <p className="text-sm mt-2 opacity-80">📎 {msg.fileName}</p>
               )}
 
+              {/* Official video */}
               {msg.video && (
+                <iframe
+                  className="mt-3 w-full rounded"
+                  height="260"
+                  src={msg.video}
+                  title="Canvas Tutorial"
+                  allowFullScreen
+                />
+              )}
+
+              {/* Official guide link */}
+              {msg.helpLink && (
                 <a
-                  href={msg.video}
+                  href={msg.helpLink}
                   target="_blank"
-                  className="block mt-3 text-blue-700 underline"
+                  className="block mt-2 text-blue-700 underline"
                 >
-                  ▶ Official Canvas tutorial video
+                  📘 Official Canvas guide
                 </a>
               )}
             </div>
@@ -202,11 +237,7 @@ export default function Home() {
 
           <label className="cursor-pointer bg-slate-200 px-3 py-2 rounded hover:bg-slate-300">
             📎
-            <input
-              type="file"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            <input type="file" onChange={handleFileChange} className="hidden" />
           </label>
 
           {file && (
