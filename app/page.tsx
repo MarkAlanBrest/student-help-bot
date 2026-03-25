@@ -50,15 +50,14 @@ export default function Home() {
     let answer = "I’m thinking about that…";
 
     try {
-      
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ message: question }),   // ⭐ FIXED
       });
 
       const data = await res.json();
-      answer = data.answer || answer;
+      answer = data.reply || answer;                   // ⭐ FIXED
     } catch {
       answer = "I couldn’t reach the AI service.";
     }

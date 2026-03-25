@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-
 // --- CANVAS STUDENT GUIDE SEARCH (NO VIDEOS) ---
 async function searchCanvasGuide(query: string) {
   const res = await fetch(
@@ -21,7 +20,6 @@ async function searchCanvasGuide(query: string) {
     }));
 }
 
-
 // --- STUDY ADVICE ---
 function getStudyAdvice() {
   return [
@@ -32,7 +30,6 @@ function getStudyAdvice() {
     "Message instructors early if confused."
   ];
 }
-
 
 // --- NEW CASTLE SCHOOL OF TRADES INFO ---
 function getNCSTInfo() {
@@ -56,7 +53,6 @@ function getNCSTInfo() {
   };
 }
 
-
 // --- BLOCK TEST/ASSIGNMENT ANSWERS ---
 function blocksCheating(userMessage: string) {
   const banned = [
@@ -65,7 +61,6 @@ function blocksCheating(userMessage: string) {
   ];
   return banned.some(b => userMessage.toLowerCase().includes(b));
 }
-
 
 // --- MAIN CHATBOT LOGIC ---
 async function handleStudentChat(userMessage: string) {
@@ -98,8 +93,7 @@ async function handleStudentChat(userMessage: string) {
   return "I couldn’t find anything in the Canvas Student Guide. Try rephrasing your question.";
 }
 
-
-// ✅ REQUIRED APP ROUTER HANDLER
+// --- API ROUTE ---
 export async function POST(request: Request) {
   const { message } = await request.json();
 
