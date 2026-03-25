@@ -19,7 +19,6 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [typing, setTyping] = useState(false);
-  const [compact, setCompact] = useState(true);
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -29,14 +28,6 @@ export default function Home() {
     "How do I message my teacher",
     "How do I take a quiz",
     "How do I view modules",
-  ];
-
-  const quickActions = [
-    "Submit assignment",
-    "View grades",
-    "Message instructor",
-    "Check due dates",
-    "Find modules",
   ];
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -102,7 +93,7 @@ export default function Home() {
   }, [messages, typing]);
 
   return (
-    <div className={`w-full h-full flex flex-col bg-white border border-slate-300 rounded-xl overflow-hidden ${compact ? "text-sm" : "text-base"}`}>
+    <div className="w-full h-full flex flex-col bg-white border border-slate-300 rounded-xl overflow-hidden">
 
       {/* Header */}
       <div className="px-4 py-3 bg-slate-100 border-b border-slate-300 flex items-center justify-between">
@@ -111,35 +102,14 @@ export default function Home() {
           <h1 className="font-semibold text-slate-800">Canvas Help Assistant</h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setCompact(!compact)}
-            className="text-slate-600 hover:text-slate-800 text-xs"
-          >
-            {compact ? "Expand" : "Compact"}
-          </button>
-
-          <button
-            onClick={resetChat}
-            className="text-slate-600 hover:text-red-600"
-            title="Reset chat"
-          >
-            <RefreshCw size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex gap-2 overflow-x-auto">
-        {quickActions.map((action) => (
-          <button
-            key={action}
-            onClick={() => setQuestion(action)}
-            className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg whitespace-nowrap hover:bg-blue-200 text-xs"
-          >
-            {action}
-          </button>
-        ))}
+        <button
+          onClick={resetChat}
+          className="text-slate-600 hover:text-red-600 flex items-center gap-1 text-sm"
+          title="Start new chat"
+        >
+          <RefreshCw size={16} />
+          Reset
+        </button>
       </div>
 
       {/* Recommended topics */}
