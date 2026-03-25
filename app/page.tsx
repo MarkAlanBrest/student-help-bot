@@ -19,16 +19,9 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [typing, setTyping] = useState(false);
+  const [placeholderVisible, setPlaceholderVisible] = useState(true);
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
-
-  const recommended = [
-    "How do I submit an assignment",
-    "Where do I find my grades",
-    "How do I message my teacher",
-    "How do I take a quiz",
-    "How do I view modules",
-  ];
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
@@ -46,6 +39,7 @@ export default function Home() {
 
     setMessages((prev) => [...prev, userMessage]);
     setTyping(true);
+    setPlaceholderVisible(false);
 
     let answer = "I’m thinking about that…";
 
@@ -85,6 +79,7 @@ export default function Home() {
     setQuestion("");
     setFile(null);
     setTyping(false);
+    setPlaceholderVisible(true);
   }
 
   useEffect(() => {
@@ -110,73 +105,60 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Two-column layout */}
-      <div className="flex flex-row border-b border-slate-200 bg-slate-50">
+      {/* Chat window */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
 
-        {/* Left column */}
-        <div className="w-1/3 p-4 border-r border-slate-200">
-          <h2 className="text-sm font-semibold mb-2 text-slate-700">Try asking about:</h2>
-
-          <div className="flex flex-wrap gap-2">
-            {recommended.map((topic) => (
-              <button
-                key={topic}
-                onClick={() => setQuestion(topic)}
-                className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200"
-              >
-                {topic}
-              </button>
-            ))}
+        {/* Placeholder suggestion */}
+        {messages.length === 0 && placeholderVisible && (
+          <div className="text-center text-slate-400 text-sm py-6">
+            💡 Try asking: <em>"How do I submit an assignment?"</em>
           </div>
-        </div>
+        )}
 
-        {/* Right column */}
-        <div className="w-2/3 p-4 space-y-4 max-h-[200px] overflow-y-auto bg-white">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${
-                msg.role === "user"
-                  ? "bg-blue-600 text-white ml-auto"
-                  : "bg-slate-100 text-slate-900 border border-slate-300"
-              }`}
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {String(msg.text)}
-              </ReactMarkdown>
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${
+              msg.role === "user"
+                ? "bg-blue-600 text-white ml-auto"
+                : "bg-slate-100 text-slate-900 border border-slate-300"
+            }`}
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {String(msg.text)}
+            </ReactMarkdown>
 
-              {msg.fileName && (
-                <p className="text-xs mt-2 opacity-80 flex items-center gap-1">
-                  <Paperclip size={14} /> {msg.fileName}
-                </p>
-              )}
+            {msg.fileName && (
+              <p className="text-xs mt-2 opacity-80 flex items-center gap-1">
+                <Paperclip size={14} /> {msg.fileName}
+              </p>
+            )}
 
-              {msg.helpLink && (
-                <a
-                  href={msg.helpLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 mt-3 text-xs font-medium underline"
-                >
-                  <LinkIcon size={14} />
-                  <span>Canvas Guide</span>
-                </a>
-              )}
+            {msg.helpLink && (
+              <a
+                href={msg.helpLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 mt-3 text-xs font-medium underline"
+              >
+                <LinkIcon size={14} />
+                <span>Canvas Guide</span>
+              </a>
+            )}
 
-              {msg.helpDescription && (
-                <p className="text-xs mt-1 opacity-80">{msg.helpDescription}</p>
-              )}
-            </div>
-          ))}
+            {msg.helpDescription && (
+              <p className="text-xs mt-1 opacity-80">{msg.helpDescription}</p>
+            )}
+          </div>
+        ))}
 
-          {typing && (
-            <div className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-xl w-fit">
-              <span className="animate-pulse">Assistant is typing…</span>
-            </div>
-          )}
+        {typing && (
+          <div className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-xl w-fit">
+            <span className="animate-pulse">Assistant is typing…</span>
+          </div>
+        )}
 
-          <div ref={chatEndRef} />
-        </div>
+        <div ref={chatEndRef} />
       </div>
 
       {/* Input bar */}
@@ -194,9 +176,13 @@ export default function Home() {
 
         <input
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={(e) => {
+            setQuestion(e.target.value);
+            setPlaceholderVisible(false);
+          }}
           placeholder="Ask a question..."
           className="flex-1 rounded-xl px-3 py-2 bg-white border border-slate-300"
+          onFocus={() => setPlaceholderVisible(false)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleSend();
           }}
