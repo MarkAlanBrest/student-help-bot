@@ -7,71 +7,107 @@ import remarkGfm from "remark-gfm";
 type Message = {
   role: "user" | "assistant";
   text: string;
-  helpLink?: string; // Official Canvas guide
+  video?: string;
+  helpLink?: string;
   fileName?: string;
 };
 
 /* ===============================
-   QUICK SAFE ANSWERS (NO AI)
+   ✅ APPROVED RESOURCES ONLY
+   🔴 PUT YOUR REAL VIDEO LINKS
 ================================ */
-function getQuickAnswer(q: string): string | null {
-  const s = q.toLowerCase();
 
-  if (s.includes("submit") && s.includes("assignment")) {
-    return `📤 **Submit an Assignment in Canvas**
+const CanvasResources = [
+  {
+    keywords: [
+      "submit","submission","turn in","turnin","upload",
+      "hand in","send assignment","post assignment",
+      "submit work","assignment upload","cant submit",
+      "won't submit","missing submit","send homework",
+      "turn work in","upload paper"
+    ],
+    video: "VIDEO_LINK_SUBMIT",
+    guide:
+      "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/416664",
+  },
 
-1. Open your course  
-2. Click **Assignments**  
-3. Select the assignment  
-4. Click **Submit Assignment**  
-5. Upload your file or enter text  
-6. Click **Submit**
+  {
+    keywords: [
+      "grade","grades","score","scores","feedback",
+      "points","mark","marks","result","results",
+      "see grade","check grade","where is my grade",
+      "graded","not graded","view grade"
+    ],
+    video: "VIDEO_LINK_GRADES",
+    guide:
+      "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/416653",
+  },
 
-You will see a confirmation when it is successful.`;
+  {
+    keywords: [
+      "discussion","reply","post","comment","forum",
+      "discussion board","respond","response",
+      "write reply","add reply","discussion post"
+    ],
+    video: "VIDEO_LINK_DISCUSSION",
+    guide:
+      "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/416663",
+  },
+
+  {
+    keywords: [
+      "module","modules","lesson","lessons",
+      "course content","course work","units",
+      "topics","where is the work","next item",
+      "open module","navigate course"
+    ],
+    video: "VIDEO_LINK_MODULES",
+    guide:
+      "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-modules/ta-p/416655",
+  },
+
+  {
+    keywords: [
+      "quiz","test","exam","assessment",
+      "take quiz","start quiz","begin test",
+      "online test","questions","attempt quiz"
+    ],
+    video: "VIDEO_LINK_QUIZ",
+    guide:
+      "https://community.canvaslms.com/t5/Student-Guide/How-do-I-take-a-quiz/ta-p/416660",
   }
-
-  if (s.includes("view") && s.includes("grade")) {
-    return `📊 **View Your Grades**
-
-1. Open your course  
-2. Click **Grades**  
-3. Review scores and feedback  
-4. Click an item for details`;
-  }
-
-  if (s.includes("discussion")) {
-    return `💬 **Reply to a Discussion**
-
-1. Open your course  
-2. Click **Discussions**  
-3. Open the discussion  
-4. Click **Reply**  
-5. Type your response  
-6. Click **Post Reply**`;
-  }
-
-  return null;
-}
+];
 
 /* ===============================
-   OFFICIAL CANVAS GUIDES ONLY
+   🔎 FIND BEST MATCH
 ================================ */
-function getOfficialGuide(question: string): string {
+
+function getCanvasResource(question: string) {
   const q = question.toLowerCase();
 
-  if (q.includes("submit") || q.includes("upload") || q.includes("turn in"))
-    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-submit-an-online-assignment/ta-p/416664";
+  for (const item of CanvasResources) {
+    if (item.keywords.some((k) => q.includes(k))) {
+      return item;
+    }
+  }
 
-  if (q.includes("grade") || q.includes("score") || q.includes("feedback"))
-    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-my-grades-in-a-current-course/ta-p/416653";
+  // Fallback guesses
+  if (q.includes("assignment") || q.includes("homework"))
+    return CanvasResources[0];
 
-  if (q.includes("discussion") || q.includes("reply") || q.includes("post"))
-    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-reply-to-a-discussion-as-a-student/ta-p/416663";
+  if (q.includes("grade"))
+    return CanvasResources[1];
+
+  if (q.includes("discussion"))
+    return CanvasResources[2];
 
   if (q.includes("module") || q.includes("lesson"))
-    return "https://community.canvaslms.com/t5/Student-Guide/How-do-I-view-modules/ta-p/416655";
+    return CanvasResources[3];
 
-  return "";
+  if (q.includes("quiz") || q.includes("test"))
+    return CanvasResources[4];
+
+  return null;
 }
 
 export default function Home() {
@@ -99,32 +135,30 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
-    /* ----- Quick answers first ----- */
-    const quick = getQuickAnswer(question);
+    /* ===== AI TEXT RESPONSE ===== */
 
-    let answer = quick;
+    let answer = "⚠️ Unable to get response.";
 
-    if (!quick) {
-      try {
-        const res = await fetch("/api/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question }),
-        });
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
 
-        const data = await res.json();
-        answer = data.answer || "No response.";
-      } catch {
-        answer = "⚠️ Unable to contact help service.";
-      }
-    }
+      const data = await res.json();
+      answer = data.answer || answer;
+    } catch {}
 
-    const helpLink = getOfficialGuide(question);
+    /* ===== RESOURCE MATCH ===== */
+
+    const resource = getCanvasResource(question);
 
     const botMessage: Message = {
       role: "assistant",
-      text: answer || "No response.",
-      helpLink: helpLink || undefined,
+      text: answer,
+      video: resource?.video,
+      helpLink: resource?.guide,
     };
 
     setMessages((prev) => [...prev, botMessage]);
@@ -142,12 +176,12 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-b from-slate-300 to-slate-500 p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl flex flex-col h-[85vh]">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="bg-blue-900 text-white p-4 rounded-t-2xl text-center text-xl font-semibold">
           Student Help Center
         </div>
 
-        {/* Chat Window */}
+        {/* CHAT WINDOW */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
 
           {messages.length === 0 && (
@@ -179,6 +213,18 @@ export default function Home() {
                 <p className="text-sm mt-2 opacity-80">📎 {msg.fileName}</p>
               )}
 
+              {/* VIDEO (approved only) */}
+              {msg.video && (
+                <iframe
+                  className="mt-3 w-full rounded"
+                  height="260"
+                  src={msg.video}
+                  title="Canvas Tutorial"
+                  allowFullScreen
+                />
+              )}
+
+              {/* OFFICIAL GUIDE */}
               {msg.helpLink && (
                 <a
                   href={msg.helpLink}
@@ -192,14 +238,12 @@ export default function Home() {
             </div>
           ))}
 
-          {loading && (
-            <p className="text-slate-500">Thinking...</p>
-          )}
+          {loading && <p className="text-slate-500">Thinking...</p>}
 
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input Bar */}
+        {/* INPUT BAR */}
         <div className="border-t bg-white p-4 flex items-center gap-3 rounded-b-2xl">
 
           <label className="cursor-pointer bg-slate-200 px-3 py-2 rounded hover:bg-slate-300">
