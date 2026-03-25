@@ -2,10 +2,22 @@ import { NextResponse } from "next/server";
 
 // --- CANVAS STUDENT GUIDE SEARCH (NO VIDEOS) ---
 async function searchCanvasGuide(query: string) {
-  const res = await fetch(
-    `https://community.instructure.com/en/kb/canvas-lms-student-guide/search?q=${encodeURIComponent(query)}`,
-    { method: "GET" }
-  );
+
+
+ const res = await fetch(
+  `https://community.instructure.com/en/kb/canvas-lms-student-guide/search?q=${encodeURIComponent(query)}`,
+  {
+    method: "GET",
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
+      "Accept": "text/html",
+    },
+  }
+);
+
+
+
 
   const html = await res.text();
 
