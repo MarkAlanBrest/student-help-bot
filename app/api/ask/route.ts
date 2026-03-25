@@ -5,6 +5,10 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
+// 🔧 CHANGE THESE FOR YOUR REAL CANVAS
+const FALLBACK_HOST = "your-school.instructure.com";
+const FALLBACK_COURSE_ID = "12345";
+
 // --- BLOCK TEST / ASSIGNMENT ANSWERS ---
 function blocksCheating(msg: string) {
   const banned = [
@@ -34,66 +38,80 @@ function getCourseIdFromUrl(url: string) {
 
 // --- MAIN CHATBOT LOGIC ---
 async function handleStudentChat(userMessage: string, refererUrl: string) {
-
   // 1. Block cheating
   if (blocksCheating(userMessage)) {
     return "I can help explain concepts, but I cannot provide answers to tests, quizzes, or assignments.";
   }
 
-  // 2. Detect course ID
-  const courseId = getCourseIdFromUrl(refererUrl);
-  const baseUrl = courseId
-    ? `https://${new URL(refererUrl).hostname}/courses/${courseId}`
-    : null;
+  // 2. Resolve host + courseId (Canvas or fallback)
+  let host = FALLBACK_HOST;
+  let courseId = FALLBACK_COURSE_ID;
+
+  if (refererUrl && refererUrl.includes("instructure.com")) {
+    try {
+      const u = new URL(refererUrl);
+      host = u.hostname;
+      const fromUrl = getCourseIdFromUrl(refererUrl);
+      if (fromUrl) courseId = fromUrl;
+    } catch {
+      // fall back to constants
+    }
+  }
+
+  const baseUrl = `https://${host}/courses/${courseId}`;
+  const text = userMessage.toLowerCase();
 
   // 3. Keyword → Link mapping
-  if (baseUrl) {
-    const text = userMessage.toLowerCase();
 
-    // Grades
-    if (
-      text.includes("grade") ||
-      text.includes("my grade") ||
-      text.includes("grades")
-    ) {
-      return `You can view your grades here:\n${baseUrl}/grades`;
-    }
+  // Grades
+  if (
+    text.includes("my grade") ||
+    text.includes("my grades") ||
+    text.includes("what's my grade") ||
+    text.includes("whats my grade") ||
+    text.includes("check my grade") ||
+    text.includes("view my grade") ||
+    text === "grade" ||
+    text === "grades" ||
+    text.includes("how am i doing")
+  ) {
+    return `You can view your grades here:\n${baseUrl}/grades`;
+  }
 
-    // Syllabus
-    if (
-      text.includes("syllabus") ||
-      text.includes("class outline") ||
-      text.includes("course outline")
-    ) {
-      return `Here is the syllabus for this course:\n${baseUrl}/assignments/syllabus`;
-    }
+  // Syllabus
+  if (
+    text.includes("syllabus") ||
+    text.includes("class outline") ||
+    text.includes("course outline")
+  ) {
+    return `Here is the syllabus for this course:\n${baseUrl}/assignments/syllabus`;
+  }
 
-    // Assignments
-    if (
-      text.includes("assignment") ||
-      text.includes("assignments") ||
-      text.includes("homework")
-    ) {
-      return `You can view all assignments here:\n${baseUrl}/assignments`;
-    }
+  // Assignments
+  if (
+    text.includes("assignment") ||
+    text.includes("assignments") ||
+    text.includes("homework")
+  ) {
+    return `You can view all assignments here:\n${baseUrl}/assignments`;
+  }
 
-    // Modules
-    if (
-      text.includes("module") ||
-      text.includes("modules") ||
-      text.includes("course content")
-    ) {
-      return `You can view the course modules here:\n${baseUrl}/modules`;
-    }
+  // Modules
+  if (
+    text.includes("module") ||
+    text.includes("modules") ||
+    text.includes("course content")
+  ) {
+    return `You can view the course modules here:\n${baseUrl}/modules`;
+  }
 
-    // Calendar
-    if (
-      text.includes("calendar") ||
-      text.includes("due dates") ||
-      text.includes("schedule")
-    ) {
-      return `Here is your course calendar:\n${baseUrl}/calendar?include_contexts=course_${courseId}`;
-    }
+  // Calendar
+  if (
+    text.includes("calendar") ||
+    text.includes("due dates") ||
+    text.includes("schedule")
+  ) {
+    return `Here is your course calendar:\n${baseUrl}/calendar?include_contexts=course_${courseId}`;
   }
 
   // 4. Normal AI response
@@ -124,8 +142,6 @@ Student question: ${userMessage}
 // --- API ROUTE ---
 export async function POST(request: Request) {
   const { message } = await request.json();
-
-  // Canvas sends the page URL in the Referer header
   const refererUrl = request.headers.get("referer") || "";
 
   const reply = await handleStudentChat(message, refererUrl);
