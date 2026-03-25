@@ -36,7 +36,7 @@ type Message = {
   fileName?: string;
 };
 
-/* ========== COMPONENTS (ALL ABOVE Home) ========== */
+/* ========== COMPONENTS ========== */
 
 function Sidebar({ theme }: { theme: "light" | "dark" }) {
   const isDark = theme === "dark";
@@ -133,12 +133,10 @@ function TopNav({
 
 function ChatWindow({
   messages,
-  loading,
   chatEndRef,
   theme,
 }: {
   messages: Message[];
-  loading: boolean;
   chatEndRef: RefObject<HTMLDivElement | null>;
   theme: "light" | "dark";
 }) {
@@ -159,8 +157,6 @@ function ChatWindow({
       {messages.map((msg, i) => (
         <MessageBubble key={i} msg={msg} theme={theme} />
       ))}
-
-      {loading && <TypingIndicator theme={theme} />}
 
       <div ref={chatEndRef} />
     </div>
@@ -210,25 +206,6 @@ function MessageBubble({ msg, theme }: { msg: Message; theme: "light" | "dark" }
       {msg.helpDescription && (
         <p className="text-xs mt-1 opacity-80">{msg.helpDescription}</p>
       )}
-    </div>
-  );
-}
-
-function TypingIndicator({ theme }: { theme: "light" | "dark" }) {
-  const isDark = theme === "dark";
-
-  return (
-    <div
-      className={`inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-xs ${
-        isDark ? "bg-white/10 text-white" : "bg-slate-200 text-slate-800"
-      }`}
-    >
-      <span className="flex gap-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.2s]" />
-        <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.1s]" />
-        <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" />
-      </span>
-      <span>Thinking…</span>
     </div>
   );
 }
@@ -358,13 +335,12 @@ function FloatingActions({ onClear }: { onClear: () => void }) {
   );
 }
 
-/* ========== HOME (LAST) ========== */
+/* ========== HOME ========== */
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -374,7 +350,7 @@ export default function Home() {
     if (selected) setFile(selected);
   }
 
-  async function handleSend() {
+  function handleSend() {
     if (!question.trim() && !file) return;
 
     const userMessage: Message = {
@@ -383,39 +359,21 @@ export default function Home() {
       fileName: file?.name,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setLoading(true);
-
-    let answer = "I’m thinking about the best way to help with that…";
-
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
-
-      const data = await res.json();
-      answer = data.answer || answer;
-    } catch {
-      answer =
-        "I couldn’t reach the AI service, but here’s a Canvas guide that might help.";
-    }
-
     const guideInfo = getCanvasGuide(question);
 
     const botMessage: Message = {
       role: "assistant",
-      text: answer,
+      text:
+        question.trim().length > 0
+          ? `I hear you asking about: "${question}". This is a demo response, but the chat is working.`
+          : "This is a demo response. The chat pipeline is working.",
       helpLink: guideInfo?.guide,
       helpDescription: guideInfo?.description,
     };
 
-    setMessages((prev) => [...prev, botMessage]);
-
+    setMessages((prev) => [...prev, userMessage, botMessage]);
     setQuestion("");
     setFile(null);
-    setLoading(false);
   }
 
   function handleClear() {
@@ -426,7 +384,7 @@ export default function Home() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages]);
 
   const isDark = theme === "dark";
 
@@ -448,7 +406,6 @@ export default function Home() {
             <div className="flex-1 flex flex-col">
               <ChatWindow
                 messages={messages}
-                loading={loading}
                 chatEndRef={chatEndRef}
                 theme={theme}
               />
