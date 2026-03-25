@@ -94,9 +94,12 @@ export default function Home() {
                   : "bg-white border"
               }`}
             >
-<p className="whitespace-pre-wrap leading-relaxed">
+<ReactMarkdown
+  remarkPlugins={[remarkGfm]}
+  className="prose max-w-none prose-slate"
+>
   {msg.text}
-</p>
+</ReactMarkdown>
               {msg.fileName && (
                 <p className="text-sm mt-2 opacity-80">
                   📎 {msg.fileName}
